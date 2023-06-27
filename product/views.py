@@ -11,15 +11,12 @@ class GETListOfProducts(generics.ListAPIView):
 
     def get_queryset(self):
         """Response list of products"""
-        try:
-            category_id_from_url = self.kwargs['category_id']
-            dictionary_from_id = self.request.query_params.dict()
+        category_id_from_url = self.kwargs['category_id']
+        dictionary_from_id = self.request.query_params
 
-            return get_sort_queryset(dictionary_from_id.get('sort_by'),
-                                     dictionary_from_id.get('sort_dict'),
-                                     get_queryset_by_category(Product.objects.all(), category_id_from_url))
-        except:
-            return []
+        return get_sort_queryset(dictionary_from_id.get('sort_by'),
+                                 dictionary_from_id.get('sort_dict'),
+                                 get_queryset_by_category(Product.objects.all(), category_id_from_url))
 
 
 def get_queryset_by_category(queryset, category_id):
