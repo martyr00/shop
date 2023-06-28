@@ -24,7 +24,7 @@ class Features(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=100, verbose_name='title', unique=True)
     text = models.CharField(max_length=200, verbose_name='text', null=True, blank=True)
-    price = models.CharField(max_length=50, verbose_name='price')
+    price = models.BigIntegerField('price')
     description = models.CharField(max_length=500, verbose_name='description')
 
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

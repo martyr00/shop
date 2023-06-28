@@ -1,21 +1,25 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from .models import Product
 from .permission import IsAdminOrReadOnly
 from .serializer import ProductSerializer
+from .filters import ProductFilter
 
 
 class GETListOfProducts(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = [IsAdminOrReadOnly, ]
+    filter_backends = [DjangoFilterBackend, ]
+    filterset_class = ProductFilter
 
     def get_queryset(self):
         """Response list of products"""
-        return self.get_sort_queryset(self.get_queryset_by_category(Product.objects.all()))
+        return self.get_sort_queryset(self.get_queryset_by_category())
 
-    def get_queryset_by_category(self, queryset):
+    def get_queryset_by_category(self):
         """Get list of products by category"""
-        return queryset.filter(category=self.kwargs['category_id'])
+        return Product.objects.filter(category=self.kwargs['category_id'])
 
     def get_sort_queryset(self, queryset):
         """Get sort list of products"""
