@@ -1,5 +1,6 @@
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from rest_framework import serializers
+
 from product.models import Product, Features, Category, ProductRating
 
 
@@ -34,7 +35,8 @@ class ProductSerializer(serializers.ModelSerializer):
         )
 
     def get_rating(self, obj):
-        current_user = self.context['request'].user if self.context['request'].user == AnonymousUser else None
+        current_user = self.context['request'].user if self.context['request'].user.is_authenticated else None
+        print()
         return {
             'like_count': ProductRating.objects.filter(product=obj.id, grade=True).count(),
             'dislike_count': ProductRating.objects.filter(product=obj.id, grade=False).count(),
