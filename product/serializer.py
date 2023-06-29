@@ -11,7 +11,7 @@ class FeaturesSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('title', )
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -23,9 +23,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductRatingSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault)
-    user_id = serializers.CharField(read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault, write_only=True)
 
     class Meta:
         model = ProductRating
-        fields = '__all__'
+        fields = ('user', )
