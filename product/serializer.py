@@ -14,7 +14,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProductsListSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     features = serializers.ManyRelatedField(child_relation=FeaturesSerializer())
 
     class Meta:
@@ -22,8 +22,9 @@ class ProductsListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    product = serializers.ManyRelatedField(child_relation=ProductsListSerializer())
+class ProductRatingSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault)
+    user_id = serializers.CharField(read_only=True)
 
     class Meta:
         model = ProductRating
