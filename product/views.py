@@ -1,11 +1,14 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
-from rest_framework import permissions
 
 
-from .models import Product, Features, Category, ProductRating
+from .models import Product, Features, Category
 from .permission import IsAdminOrReadOnly
-from .serializer import FeaturesSerializer, CategorySerializer, ProductSerializer, ProductRatingSerializer
+from .serializer import (
+    FeaturesSerializer,
+    CategorySerializer,
+    ProductSerializer,
+)
 from .filters import ProductFilter
 
 
@@ -50,13 +53,3 @@ class GETListOfCategories(generics.ListAPIView):
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
-
-
-class RatingOneProduct(generics.ListCreateAPIView):
-    queryset = ProductRating.objects.all()
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, ]
-    serializer_class = ProductRatingSerializer
-
-    def get_queryset(self):
-        product = ProductRating.objects.filter(product=self.kwargs.get('pk'))
-        return product.filter(grade=bool(self.kwargs.get('grade')))
