@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import GETListOfProducts, GETItemOfProduct, GETListOfFeatures, GETListOfCategories
+from .views import GetListOfProducts, GetItemOfProduct, GetListOfFeatures, GetListOfCategories, PostRatingFromUser
 
 urlpatterns = [
-    path('category/<int:category_id>/', GETListOfProducts.as_view()),
-    path('product/<int:pk>/', GETItemOfProduct.as_view()),
-    path('features/', GETListOfFeatures.as_view()),
-    path('categories/', GETListOfCategories.as_view()),
+    path('category/<int:category_id>/', GetListOfProducts.as_view()),
+    path('product/<int:pk>/', GetItemOfProduct.as_view()),
+    path('product/<int:pk>/<int:grade>', PostRatingFromUser.as_view()),
+    path('features/', GetListOfFeatures.as_view()),
+    path('categories/', GetListOfCategories.as_view()),
 ]

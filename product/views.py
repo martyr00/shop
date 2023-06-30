@@ -1,18 +1,20 @@
+from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
-
-from .models import Product, Features, Category
-from .permission import IsAdminOrReadOnly
+from .models import Product, Features, Category, ProductRating
+from .permission import IsAdminOrReadOnly, IsAdminOrAuthenticatedUser
 from .serializer import (
     FeaturesSerializer,
     CategorySerializer,
-    ProductSerializer,
+    ProductSerializer, ProductRatingSerializer,
 )
 from .filters import ProductFilter
 
 
-class GETListOfProducts(generics.ListAPIView):
+class GetListOfProducts(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
@@ -37,19 +39,37 @@ class GETListOfProducts(generics.ListAPIView):
         return queryset.order_by(sort_dict + sort_by)
 
 
-class GETItemOfProduct(generics.RetrieveAPIView):
+class GetItemOfProduct(generics.RetrieveUpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
 
 
-class GETListOfFeatures(generics.ListAPIView):
+class GetListOfFeatures(generics.ListAPIView):
     queryset = Features.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = FeaturesSerializer
 
 
-class GETListOfCategories(generics.ListAPIView):
+class GetListOfCategories(generics.ListAPIView):
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
+
+
+class PostRatingFromUser(generics.CreateAPIView):
+    queryset = ProductRating.objects.all()
+    permission_classes = [IsAdminOrAuthenticatedUser, ]
+    serializer_class = ProductRatingSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            rating_from_db = ProductRating.objects.get(product_id=kwargs['pk'], user=request.user)
+            if bool(request.query_params.get('remove')):
+                rating_from_db.delete()
+                return Response(status=204)
+            rating_from_db.grade = kwargs['grade']
+            rating_from_db.save()
+        except ProductRating.DoesNotExist:
+            ProductRating.objects.create(user=request.user, product_id=kwargs['pk'], grade=kwargs['grade']).save()
+        return Response(status=200)

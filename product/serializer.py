@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AnonymousUser, User
-from rest_framework import serializers
+from rest_framework import serializers, permissions
 
 from product.models import Product, Features, Category, ProductRating
 
@@ -43,3 +43,12 @@ class ProductSerializer(serializers.ModelSerializer):
             'current_user_likes': bool(ProductRating.objects.filter(product=obj.id, grade=True, user=current_user)),
             'current_user_dislikes': bool(ProductRating.objects.filter(product=obj.id, grade=False, user=current_user)),
         }
+
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    product_id = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ProductRating
+        fields = '__all__'
