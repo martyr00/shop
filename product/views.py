@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from .models import (
     Product,
     Category,
-    ProductRating,
+    ProductRating, Features,
 )
 from .permission import (
     IsAdminOrReadOnly,
@@ -14,7 +14,7 @@ from .permission import (
 )
 from .serializer import (
     CategorySerializer,
-    ProductListSerializer, ProductRatingSerializer, ProductSerializer,
+    ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
 )
 from .filters import ProductFilter
 
@@ -46,11 +46,13 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
 
 class PostRatingFromUser(generics.CreateAPIView):
+    """Rate the product"""
     queryset = ProductRating.objects.all()
     permission_classes = [IsAdminOrAuthenticatedUser, ]
     serializer_class = ProductRatingSerializer
 
     def post(self, request, *args, **kwargs):
+        """record user rating in database"""
         grade = True if request.data.get('grade') == 'like' else False
         try:
             obj, created_object = ProductRating.objects.get_or_create(
@@ -71,13 +73,26 @@ class PostRatingFromUser(generics.CreateAPIView):
         return Response(status=200)
 
 
-class GetItemOfProduct(generics.RetrieveUpdateAPIView):
+class GetItemOfProduct(generics.RetrieveAPIView):
+    """Get one product"""
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
 
 
 class GetListOfCategories(generics.ListAPIView):
+    """Get list of category"""
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
+
+
+class GetUniqueFeaturesProductsByCategory(generics.ListAPIView):
+    """Get unique features of products of one category"""
+    queryset = Features.objects.all()
+    permission_classes = [IsAdminOrReadOnly, ]
+    serializer_class = FeaturesSerializer
+
+    def get_queryset(self):
+        """response unique features queryset by category"""
+        return Features.objects.filter(product__category_id=self.kwargs['category_id']).distinct()
