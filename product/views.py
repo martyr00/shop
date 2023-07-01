@@ -1,8 +1,7 @@
-from django.http import Http404
+from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 
 from .models import Product, Features, Category, ProductRating
 from .permission import IsAdminOrReadOnly, IsAdminOrAuthenticatedUser
@@ -14,7 +13,7 @@ from .serializer import (
 from .filters import ProductFilter
 
 
-class GetListOfProducts(generics.ListAPIView):
+class GetListOfProductsByCategory(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
@@ -64,12 +63,19 @@ class PostRatingFromUser(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            rating_from_db = ProductRating.objects.get(product_id=kwargs['pk'], user=request.user)
-            if bool(request.query_params.get('remove')):
-                rating_from_db.delete()
+            obj, created_object = ProductRating.objects.get_or_create(
+                product_id=request.data.get('product_id'),
+                user=request.user,
+                grade=request.data.get('grade'),
+            )
+            if not created_object:
+                obj.delete()
                 return Response(status=204)
-            rating_from_db.grade = kwargs['grade']
-            rating_from_db.save()
-        except ProductRating.DoesNotExist:
-            ProductRating.objects.create(user=request.user, product_id=kwargs['pk'], grade=kwargs['grade']).save()
+        except IntegrityError:
+            ProductRating.objects.filter(
+                product_id=request.data.get('product_id'),
+                user=request.user,
+            ).update(
+                grade=request.data.get('grade'),
+            )
         return Response(status=200)
