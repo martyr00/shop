@@ -1,5 +1,4 @@
-from django.contrib.auth.models import AnonymousUser, User
-from rest_framework import serializers, permissions
+from rest_framework import serializers
 
 from product.models import Product, Features, Category, ProductRating
 
@@ -16,10 +15,37 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('title',)
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    features = serializers.ManyRelatedField(child_relation=FeaturesSerializer())
+    features = FeaturesSerializer(many=True)
+    category = serializers.CharField()
+    category_id = serializers.IntegerField()
+
+    class Meta:
+        model = Product
+        fields = (
+            "id",
+            "title",
+            "price",
+            "category",
+            "category_id",
+            "features",
+        )
+
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    product_id = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ProductRating
+        fields = '__all__'
+
+
+class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
+    category = serializers.CharField()
+    features = FeaturesSerializer(many=True)
 
     class Meta:
         model = Product
@@ -28,10 +54,11 @@ class ProductSerializer(serializers.ModelSerializer):
             "title",
             "text",
             "price",
+            'category',
+            'category_id',
             "description",
-            "category",
             "features",
-            'rating'
+            'rating',
         )
 
     def get_rating(self, obj):
@@ -43,12 +70,3 @@ class ProductSerializer(serializers.ModelSerializer):
             'current_user_likes': bool(ProductRating.objects.filter(product=obj.id, grade=True, user=current_user)),
             'current_user_dislikes': bool(ProductRating.objects.filter(product=obj.id, grade=False, user=current_user)),
         }
-
-
-class ProductRatingSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    product_id = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = ProductRating
-        fields = '__all__'
