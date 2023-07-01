@@ -29,7 +29,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
     def get_queryset(self):
         """Response queryset"""
-        return self.get_sort_queryset(self.get_queryset_by_category())
+        return self.get_filtered_queryset(self.get_sort_queryset(self.get_queryset_by_category()))
 
     def get_queryset_by_category(self):
         """Get queryset by category"""
@@ -43,6 +43,27 @@ class GetListOfProductsByCategory(generics.ListAPIView):
         sort_by = 'title' if dictionary_from_id.get('sort_by') is None else dictionary_from_id.get('sort_by')
 
         return queryset.order_by(sort_dict + sort_by)
+
+    def get_filtered_queryset(self, queryset):
+        print(111)
+        print(self.request.query_params)
+        print(222)
+
+
+        keys = self.request.query_params.get('key').split(',') if self.request.query_params.get('key') else None
+        values = self.request.query_params.get('value').split(',') if self.request.query_params.get('value') else None
+        print(keys)
+
+        if not keys and not values or len(keys) != len(values):
+            print("error")
+            return queryset
+
+        for ele in range(len(keys)):
+            print('key', ele, keys[ele])
+            print('value', ele, values[ele])
+            queryset = queryset.filter(features__key=keys[ele], features__value=values[ele])
+
+        return queryset
 
 
 class PostRatingFromUser(generics.CreateAPIView):
