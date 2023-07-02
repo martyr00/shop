@@ -13,7 +13,7 @@ class FeaturesSerializerForProduct(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('title','id')
+        fields = ('title', 'id')
 
 
 class ProductRatingSerializer(serializers.ModelSerializer):
@@ -34,7 +34,10 @@ class FeaturesSerializer(serializers.ModelSerializer):
         fields = ('key', 'options')
 
     def get_options(self, obj):
-        return Features.objects.filter(product__category_id=self.context['view'].kwargs['category_id'], key=obj.get('key')).values('value').distinct()
+        return Features.objects.filter(
+            product__category_id=self.context['view'].kwargs['category_id'],
+            key=obj.get('key')
+        ).values('value', 'id').distinct()
 
 
 class ProductListSerializer(serializers.ModelSerializer):

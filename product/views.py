@@ -1,6 +1,8 @@
 from django.db import IntegrityError
+from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from .models import (
@@ -14,7 +16,7 @@ from .permission import (
 )
 from .serializer import (
     CategorySerializer,
-    ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializerForProduct, FeaturesSerializer,
+    ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
 )
 from .filters import ProductFilter
 
@@ -33,7 +35,9 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
     def get_queryset_by_category(self):
         """Get queryset by category"""
-        return Product.objects.filter(category=self.kwargs['category_id'])
+        if Product.objects.filter(category=self.kwargs['category_id']):
+            return Product.objects.filter(category=self.kwargs['category_id'])
+        raise NotFound
 
     def get_sort_queryset(self, queryset):
         """Get sort queryset"""
@@ -50,7 +54,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
         if not keys and not values or len(keys) != len(values):
             return queryset
-
+#
         for ele in range(len(keys)):
             queryset = queryset.filter(features__key=keys[ele], features__value=values[ele])
 
@@ -100,13 +104,13 @@ class GetListOfCategories(generics.ListAPIView):
 
 
 class GetUniqueFeaturesProductsByCategory(generics.ListAPIView):
-    """Get unique features of products of one category"""
+    """Get unique key features of products of one category"""
     queryset = Features.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = FeaturesSerializer
 
     def get_queryset(self):
-        """response unique features queryset by category"""
+        """response unique features.key dict by category"""
         return Features.objects.filter(
             product__category_id=self.kwargs['category_id']
         ).distinct().values(
