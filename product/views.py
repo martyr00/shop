@@ -14,7 +14,7 @@ from .permission import (
 )
 from .serializer import (
     CategorySerializer,
-    ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
+    ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializerForProduct, FeaturesSerializer,
 )
 from .filters import ProductFilter
 
@@ -45,22 +45,13 @@ class GetListOfProductsByCategory(generics.ListAPIView):
         return queryset.order_by(sort_dict + sort_by)
 
     def get_filtered_queryset(self, queryset):
-        print(111)
-        print(self.request.query_params)
-        print(222)
-
-
         keys = self.request.query_params.get('key').split(',') if self.request.query_params.get('key') else None
         values = self.request.query_params.get('value').split(',') if self.request.query_params.get('value') else None
-        print(keys)
 
         if not keys and not values or len(keys) != len(values):
-            print("error")
             return queryset
 
         for ele in range(len(keys)):
-            print('key', ele, keys[ele])
-            print('value', ele, values[ele])
             queryset = queryset.filter(features__key=keys[ele], features__value=values[ele])
 
         return queryset
@@ -116,4 +107,8 @@ class GetUniqueFeaturesProductsByCategory(generics.ListAPIView):
 
     def get_queryset(self):
         """response unique features queryset by category"""
-        return Features.objects.filter(product__category_id=self.kwargs['category_id']).distinct()
+        return Features.objects.filter(
+            product__category_id=self.kwargs['category_id']
+        ).distinct().values(
+            'key',
+        ).distinct()

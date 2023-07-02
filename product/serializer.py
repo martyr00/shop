@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from product.models import Product, Features, Category, ProductRating
 
 
-class FeaturesSerializer(serializers.ModelSerializer):
+class FeaturesSerializerForProduct(serializers.ModelSerializer):
     class Meta:
         model = Features
         fields = '__all__'
@@ -12,12 +13,33 @@ class FeaturesSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('title',)
+        fields = ('title','id')
+
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    product_id = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ProductRating
+        fields = '__all__'
+
+
+class FeaturesSerializer(serializers.ModelSerializer):
+    key = serializers.CharField(validators=[UniqueValidator(queryset=Features.objects.all())])
+    options = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Features
+        fields = ('key', 'options')
+
+    def get_options(self, obj):
+        return Features.objects.filter(product__category_id=self.context['view'].kwargs['category_id'], key=obj.get('key')).values('value').distinct()
 
 
 class ProductListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    features = FeaturesSerializer(many=True)
+    features = FeaturesSerializerForProduct(many=True)
     category = serializers.CharField()
     category_id = serializers.IntegerField()
 
@@ -33,19 +55,10 @@ class ProductListSerializer(serializers.ModelSerializer):
         )
 
 
-class ProductRatingSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    product_id = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = ProductRating
-        fields = '__all__'
-
-
 class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
     category = serializers.CharField()
-    features = FeaturesSerializer(many=True)
+    features = FeaturesSerializerForProduct(many=True)
 
     class Meta:
         model = Product
