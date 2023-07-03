@@ -2,14 +2,13 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from product.permission import IsAnonymous
+from rest_framework import permissions
 from .serializer import UserSerializer
 
 
 class UserRegistrationView(CreateAPIView):
     serializer_class = UserSerializer
-    permission_classes = [IsAnonymous, ]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
