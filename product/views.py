@@ -21,7 +21,7 @@ from .filters import ProductFilter
 
 
 class GetListOfProductsByCategory(generics.ListAPIView):
-    """Response list of products by category id"""
+    """Response filtered list of products by category_id and features and sorted"""
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     permission_classes = [IsAdminOrReadOnly, ]
@@ -30,11 +30,10 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
     def get_queryset(self):
         """Response queryset"""
-        print(not self.request.user.is_authenticated)
         return self.get_filtered_queryset(self.get_sort_queryset(self.get_queryset_by_category()))
 
     def get_queryset_by_category(self):
-        """Get queryset by category"""
+        """Get queryset filtered by category"""
         if Product.objects.filter(category=self.kwargs['category_id']):
             return Product.objects.filter(category=self.kwargs['category_id'])
         raise NotFound
@@ -49,14 +48,18 @@ class GetListOfProductsByCategory(generics.ListAPIView):
         return queryset.order_by(sort_dict + sort_by)
 
     def get_filtered_queryset(self, queryset):
-        keys = self.request.query_params.get('key').split(',') if self.request.query_params.get('key') else None
-        values = self.request.query_params.get('value').split(',') if self.request.query_params.get('value') else None
+        """Get queryset filtered by features_id in query_params"""
+        filters = self.request.query_params.getlist('filter') if self.request.query_params.getlist('filter') else None
 
-        if not keys and not values or len(keys) != len(values):
+        if not filters:
             return queryset
-#
+        features = Features.objects.filter(id__in=filters)
+
+        keys = features.values_list('key', flat=True)
+        values = features.values_list('value', flat=True)
+
         for ele in range(len(keys)):
-            queryset = queryset.filter(features__key=keys[ele], features__value=values[ele])
+            queryset = queryset.filter(features__key__in=keys, features__value=values[ele])
 
         return queryset
 
@@ -68,7 +71,7 @@ class PostRatingFromUser(generics.CreateAPIView):
     serializer_class = ProductRatingSerializer
 
     def post(self, request, *args, **kwargs):
-        """record user rating in database"""
+        """Record user rating in database"""
         grade = True if request.data.get('grade') == 'like' else False
         try:
             obj, created_object = ProductRating.objects.get_or_create(
@@ -97,20 +100,20 @@ class GetItemOfProduct(generics.RetrieveAPIView):
 
 
 class GetListOfCategories(generics.ListAPIView):
-    """Get list of category"""
+    """Get filtered queryset  category"""
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
 
 
 class GetUniqueFeaturesProductsByCategory(generics.ListAPIView):
-    """Get unique key features of products of one category"""
+    """Get unique keys of features by products in one category"""
     queryset = Features.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = FeaturesSerializer
 
     def get_queryset(self):
-        """response unique features.key dict by category"""
+        """Response unique features keys dict by category"""
         return Features.objects.filter(
             product__category_id=self.kwargs['category_id']
         ).distinct().values(
