@@ -30,6 +30,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
     def get_queryset(self):
         """Response queryset"""
+        print(not self.request.user.is_authenticated)
         return self.get_filtered_queryset(self.get_sort_queryset(self.get_queryset_by_category()))
 
     def get_queryset_by_category(self):

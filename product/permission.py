@@ -14,3 +14,9 @@ class IsAdminOrAuthenticatedUser(permissions.BasePermission):
         if request.user.is_authenticated:
             return True
         return bool(request.user and request.user.is_staff)
+
+
+class IsAnonymous(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(not request.user.is_authenticated)
+
