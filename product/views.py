@@ -58,7 +58,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
         keys = features.values_list('key', flat=True)
         values = features.values_list('value', flat=True)
 
-        for ele in range(len(keys)):
+        for ele in range(len(values)):
             queryset = queryset.filter(features__key__in=keys, features__value=values[ele])
 
         return queryset
