@@ -39,7 +39,7 @@ class ListOfProductsByCategory(generics.ListAPIView):
         product_list_by_category = Product.objects.filter(category=self.kwargs['category_id'])
         if product_list_by_category:
             return product_list_by_category
-        return JsonResponse({'detail': 'Not found.'}, status=HttpStatusCode.NOT_FOUND)
+        raise NotFound
 
     def get_sort_queryset(self, queryset):
         """Get sort queryset"""
