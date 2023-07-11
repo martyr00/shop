@@ -99,7 +99,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
     def test_get_list_of_product_by_category_not_found(self):
         """
         Case: get list of product by category with category id out of scope
-        Expect: invalid incoming arguments errors' messages.
+        Expect: not found errors' messages.
         """
         expected_result = {
             "detail": "Not found."
@@ -198,7 +198,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
     def test_get_product_not_found(self):
         """
         Case: get product with product id out of scope
-        Expect: invalid incoming arguments errors' messages.
+        Expect: not found errors' messages.
         """
         expected_result = {
             "detail": "Not found."

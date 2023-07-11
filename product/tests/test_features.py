@@ -7,6 +7,9 @@ from product.utils import comparison_of_expected_and_result
 
 class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
     def setUp(self):
+        """
+        Set up data for tests.
+        """
         self.test_features = Features.objects.create(
             key='Test key',
             value='Test value'
@@ -24,6 +27,10 @@ class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
         self.test_product.features.add(self.test_features)
 
     def test_get_unique_features_products_by_category(self):
+        """
+        Case: get list of unique features products by category.
+        Expect: list of unique features products by category
+        """
         expected_result = {
             'count': Features.objects.filter(product__category_id=self.test_category.id).count(),
             'next': None,
@@ -47,6 +54,26 @@ class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
 
         comparison_of_expected_and_result(
             HttpStatusCode.OK.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
+
+    def test_get_unique_features_products_by_category_not_found(self):
+        """
+        Case: get list of unique features products by category.
+        Expect: not found errors' messages.
+        """
+        expected_result = {
+            "detail": "Not found."
+        }
+
+        response = self.client.get(
+            path=f'/api/v1/feature/category/{Category.objects.count()+1}/',
+        )
+
+        comparison_of_expected_and_result(
+            HttpStatusCode.NOT_FOUND.value,
             response.status_code,
             expected_result,
             response.json()
