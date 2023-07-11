@@ -125,8 +125,11 @@ class UniqueFeaturesProductsByCategory(generics.ListAPIView):
 
     def get_queryset(self):
         """Response unique features keys dict by category"""
-        return Features.objects.filter(
+        result_queryset = Features.objects.filter(
             product__category_id=self.kwargs['category_id']
         ).distinct().values(
             'key',
         ).distinct()
+        if result_queryset:
+            return result_queryset
+        raise NotFound
