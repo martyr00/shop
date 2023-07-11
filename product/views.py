@@ -1,9 +1,10 @@
+from http import HTTPStatus as HttpStatusCode
 from django.db import IntegrityError
+from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from http import HTTPStatus
 
 from .models import (
     Product,
@@ -19,7 +20,6 @@ from .serializer import (
     ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
 )
 from .filters import ProductFilter
-from .utils import DataMixin
 
 
 class ListOfProductsByCategory(generics.ListAPIView):
@@ -39,7 +39,7 @@ class ListOfProductsByCategory(generics.ListAPIView):
         product_list_by_category = Product.objects.filter(category=self.kwargs['category_id'])
         if product_list_by_category:
             return product_list_by_category
-        raise NotFound
+        return JsonResponse({'detail': 'Not found.'}, status=HttpStatusCode.NOT_FOUND)
 
     def get_sort_queryset(self, queryset):
         """Get sort queryset"""
@@ -68,7 +68,7 @@ class ListOfProductsByCategory(generics.ListAPIView):
         return queryset
 
 
-class RatingFromUser(DataMixin, generics.CreateAPIView):
+class RatingFromUser(generics.CreateAPIView):
     """Rate the product"""
     queryset = ProductRating.objects.all()
     permission_classes = [IsAdminOrAuthenticatedUser, ]
@@ -76,10 +76,17 @@ class RatingFromUser(DataMixin, generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         """Record user rating in database"""
-        grade = True if self.is_get_field_from_data('grade', data=request.data) == 'like' else False
+        grade = True if request.data.get('grade') == 'like' else False
+        product_id = request.data.get('product_id')
+
+        is_product_id_int = False if isinstance(product_id, int) else True
+
+        if not product_id or is_product_id_int or Product.objects.count() < product_id or request.data.get('grade'):
+            return JsonResponse({'detail': 'Bad request.'}, status=HttpStatusCode.BAD_REQUEST)
+
         try:
             obj, created_object = ProductRating.objects.get_or_create(
-                product_id=self.is_get_field_from_data('product_id', data=request.data),
+                product_id=product_id,
                 user=request.user,
                 grade=grade,
             )
@@ -88,7 +95,7 @@ class RatingFromUser(DataMixin, generics.CreateAPIView):
                 return Response(status=204)
         except IntegrityError:
             ProductRating.objects.filter(
-                product_id=self.is_get_field_from_data('product_id', data=request.data),
+                product_id=product_id,
                 user=request.user,
             ).update(
                 grade=grade,
