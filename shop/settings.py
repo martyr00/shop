@@ -2,6 +2,8 @@ import os.path
 from datetime import timedelta
 from pathlib import Path
 
+import shop.middlewares
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +35,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'shop.middlewares.LoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -183,4 +186,33 @@ CACHES = {
         'LOCATION': 'cache_table',
 
     }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'main_format': {
+            'format': '{module} || {asctime} || {levelname} || {filename} || {message}',
+            'style': '{',
+        }
+    },
+
+    'handlers': {
+        'in_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'main_format',
+            'level': 'WARNING',
+            'filename': 'information.log',
+        }
+    },
+
+    'loggers': {
+        'main': {
+            'handlers': ['in_file', ],
+            'level': 'WARNING',
+            'propagate': True,
+        }
+    },
+
 }

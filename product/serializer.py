@@ -49,12 +49,12 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            "id",
-            "title",
-            "price",
-            "category",
-            "category_id",
-            "features",
+            'id',
+            'title',
+            'price',
+            'category',
+            'category_id',
+            'features',
         )
 
 
@@ -66,20 +66,19 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            "id",
-            "title",
-            "text",
-            "price",
+            'id',
+            'title',
+            'text',
+            'price',
             'category',
             'category_id',
-            "description",
-            "features",
+            'description',
+            'features',
             'rating',
         )
 
     def get_rating(self, obj):
         current_user = self.context['request'].user if self.context['request'].user.is_authenticated else None
-        print()
         return {
             'like_count': ProductRating.objects.filter(product=obj.id, grade=True).count(),
             'dislike_count': ProductRating.objects.filter(product=obj.id, grade=False).count(),

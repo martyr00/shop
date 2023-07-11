@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from http import HTTPStatus
 
 from .models import (
     Product,
@@ -18,9 +19,10 @@ from .serializer import (
     ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
 )
 from .filters import ProductFilter
+from .utils import DataMixin
 
 
-class GetListOfProductsByCategory(generics.ListAPIView):
+class ListOfProductsByCategory(generics.ListAPIView):
     """Response filtered list of products by category_id and features and sorted"""
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
@@ -34,8 +36,9 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
     def get_queryset_by_category(self):
         """Get queryset filtered by category"""
-        if Product.objects.filter(category=self.kwargs['category_id']):
-            return Product.objects.filter(category=self.kwargs['category_id'])
+        product_list_by_category = Product.objects.filter(category=self.kwargs['category_id'])
+        if product_list_by_category:
+            return product_list_by_category
         raise NotFound
 
     def get_sort_queryset(self, queryset):
@@ -53,6 +56,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
 
         if not filters:
             return queryset
+
         features = Features.objects.filter(id__in=filters)
 
         keys = features.values_list('key', flat=True)
@@ -64,7 +68,7 @@ class GetListOfProductsByCategory(generics.ListAPIView):
         return queryset
 
 
-class PostRatingFromUser(generics.CreateAPIView):
+class RatingFromUser(DataMixin, generics.CreateAPIView):
     """Rate the product"""
     queryset = ProductRating.objects.all()
     permission_classes = [IsAdminOrAuthenticatedUser, ]
@@ -72,10 +76,10 @@ class PostRatingFromUser(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         """Record user rating in database"""
-        grade = True if request.data.get('grade') == 'like' else False
+        grade = True if self.is_get_field_from_data('grade', data=request.data) == 'like' else False
         try:
             obj, created_object = ProductRating.objects.get_or_create(
-                product_id=request.data.get('product_id'),
+                product_id=self.is_get_field_from_data('product_id', data=request.data),
                 user=request.user,
                 grade=grade,
             )
@@ -84,7 +88,7 @@ class PostRatingFromUser(generics.CreateAPIView):
                 return Response(status=204)
         except IntegrityError:
             ProductRating.objects.filter(
-                product_id=request.data.get('product_id'),
+                product_id=self.is_get_field_from_data('product_id', data=request.data),
                 user=request.user,
             ).update(
                 grade=grade,
@@ -92,21 +96,21 @@ class PostRatingFromUser(generics.CreateAPIView):
         return Response(status=200)
 
 
-class GetItemOfProduct(generics.RetrieveAPIView):
+class ItemOfProducts(generics.RetrieveAPIView):
     """Get one product"""
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
 
 
-class GetListOfCategories(generics.ListAPIView):
+class ListOfCategories(generics.ListAPIView):
     """Get filtered queryset  category"""
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
 
 
-class GetUniqueFeaturesProductsByCategory(generics.ListAPIView):
+class UniqueFeaturesProductsByCategory(generics.ListAPIView):
     """Get unique keys of features by products in one category"""
     queryset = Features.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
