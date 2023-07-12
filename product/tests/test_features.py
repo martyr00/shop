@@ -6,6 +6,9 @@ from product.utils import comparison_of_expected_and_result
 
 
 class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
+
+    reset_sequences = True
+
     def setUp(self):
         """
         Set up data for tests.

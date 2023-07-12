@@ -9,9 +9,7 @@ class CategoryModelViewGetMethodTestCase(TransactionTestCase):
    Category collection view get method test case implementation.
    """
 
-    databases = {'default'}
     reset_sequences = True
-    serialized_rollback = True
 
     def setUp(self):
         """
