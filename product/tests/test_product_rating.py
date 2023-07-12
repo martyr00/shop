@@ -7,7 +7,6 @@ from http import HTTPStatus as HttpStatusCode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from product.models import Category, Product, ProductRating
-from product.utils import comparison_of_expected_and_result
 
 
 class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
@@ -64,12 +63,8 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_remove_user_rating_like(self):
         """
@@ -94,12 +89,8 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_swap_user_rating_from_like_to_dislike(self):
         """
@@ -124,12 +115,8 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_record_user_rating_unauthorized(self):
         """
@@ -144,12 +131,8 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             data=json.dumps(self.data_post_like),
             content_type='application/json',
         )
-        comparison_of_expected_and_result(
-            HttpStatusCode.UNAUTHORIZED.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
+        assert expected_result == response.json()
 
     def test_post_like_without_product_id_in_data(self):
         expected_result = {
@@ -167,9 +150,5 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.BAD_REQUEST.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.BAD_REQUEST.value == response.status_code
+        assert expected_result == response.json()

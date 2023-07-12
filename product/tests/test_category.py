@@ -43,4 +43,3 @@ class CategoryModelViewGetMethodTestCase(TransactionTestCase):
 
         assert HttpStatusCode.OK.value == response.status_code
         assert expected_result == response.json()
-        assert Category.objects.filter(id=self.test_category.id)

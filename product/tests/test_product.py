@@ -5,7 +5,6 @@ from http import HTTPStatus as HttpStatusCode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from product.models import Category, Product, Features, ProductRating
-from product.utils import comparison_of_expected_and_result
 
 
 class ProductModelViewGETMethodTestCase(TransactionTestCase):
@@ -89,12 +88,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             path='/api/v1/category/1/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_list_of_product_by_category_not_found(self):
         """
@@ -109,12 +104,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/category/{Category.objects.count()+1}/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.NOT_FOUND.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.NOT_FOUND.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_product_no_rating_from_user(self):
         """
@@ -132,12 +123,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/product/{self.test_product.id}/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_product_with_like_from_user(self):
         """
@@ -160,12 +147,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             headers={"Authorization": "Bearer " + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-                HttpStatusCode.OK.value,
-                response.status_code,
-                expected_result,
-                response.json()
-            )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_product_with_dislike_from_user(self):
         """
@@ -188,12 +171,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             headers={"Authorization": "Bearer " + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
-        comparison_of_expected_and_result(
-                HttpStatusCode.OK.value,
-                response.status_code,
-                expected_result,
-                response.json()
-            )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_product_not_found(self):
         """
@@ -208,12 +187,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/product/{Product.objects.count()+1}/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.NOT_FOUND.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.NOT_FOUND.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_product_with_query_params(self):
         """
@@ -259,9 +234,5 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/category/{self.test_category.id}/?filter=2',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()

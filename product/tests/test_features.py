@@ -2,7 +2,6 @@ from django.test import TransactionTestCase
 from http import HTTPStatus as HttpStatusCode
 
 from product.models import Features, Category, Product
-from product.utils import comparison_of_expected_and_result
 
 
 class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
@@ -55,12 +54,8 @@ class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/feature/category/{self.test_category.id}/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.OK.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
 
     def test_get_unique_features_products_by_category_not_found(self):
         """
@@ -75,9 +70,5 @@ class FeaturesModelViewGETMethodTestCase(TransactionTestCase):
             path=f'/api/v1/feature/category/{Category.objects.count()+1}/',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.NOT_FOUND.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.NOT_FOUND.value == response.status_code
+        assert expected_result == response.json()

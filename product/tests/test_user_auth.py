@@ -4,8 +4,6 @@ from django.contrib.auth.models import User
 from django.test import TransactionTestCase
 from http import HTTPStatus as HttpStatusCode
 
-from product.utils import comparison_of_expected_and_result
-
 
 class UserModelViewPOSTMethodTestCase(TransactionTestCase):
     def setUp(self):
@@ -44,9 +42,5 @@ class UserModelViewPOSTMethodTestCase(TransactionTestCase):
             content_type='application/json',
         )
 
-        comparison_of_expected_and_result(
-            HttpStatusCode.BAD_REQUEST.value,
-            response.status_code,
-            expected_result,
-            response.json()
-        )
+        assert HttpStatusCode.BAD_REQUEST.value == response.status_code
+        assert expected_result == response.json()
