@@ -136,9 +136,40 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         Case: check user's access token
         Expect: returned error's message unauthorized
         """
+        expected_result = {
+            "detail": "Authentication credentials were not provided."
+        }
         response = self.client.post(
             path='/api/v1/rating/',
             data=json.dumps(self.data_post_like),
             content_type='application/json',
         )
-        assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
+        comparison_of_expected_and_result(
+            HttpStatusCode.UNAUTHORIZED.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
+
+    def test_post_like_without_product_id_in_data(self):
+        expected_result = {
+            "detail": "Bad request."
+        }
+
+        data_without_product_id = {
+            'grade': 'like'
+        }
+
+        response = self.client.post(
+            path='/api/v1/rating/',
+            data=json.dumps(data_without_product_id),
+            content_type='application/json',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
+
+        comparison_of_expected_and_result(
+            HttpStatusCode.BAD_REQUEST.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )

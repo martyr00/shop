@@ -214,3 +214,54 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             expected_result,
             response.json()
         )
+
+    def test_get_product_with_query_params(self):
+        """
+        Case: get list product with the features.
+        Expect: list product filtered by features .
+        """
+
+        test_features_in_product = Product.objects.create(
+            title='title test2',
+            text=None,
+            price=400,
+            description='test description test',
+            category=self.test_category,
+        )
+
+        test_features_in_product.features.add(Features.objects.create(
+            key='Test key 2',
+            value='Test value 2'
+        ))
+        expected_result = {
+            'count': 1,
+            'next': None,
+            'previous': None,
+            'results': [
+                {
+                    'id': 2,
+                    'title': 'title test2',
+                    'price': 400,
+                    'category': 'Test Category',
+                    'category_id': 1,
+                    'features': [
+                        {
+                            'id': 2,
+                            'key': 'Test key 2',
+                            'value': 'Test value 2'
+                        }
+                    ]
+                },
+            ]
+        }
+
+        response = self.client.get(
+            path=f'/api/v1/category/{self.test_category.id}/?filter=2',
+        )
+
+        comparison_of_expected_and_result(
+            HttpStatusCode.OK.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
