@@ -77,11 +77,10 @@ class RatingFromUser(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         """Record user rating in database"""
         grade = True if request.data.get('grade') == 'like' else False
+        enum_grade = 'like' if grade else 'dislike'
         product_id = request.data.get('product_id')
 
-        is_product_id_int = False if isinstance(product_id, int) else True
-
-        if not product_id or is_product_id_int or Product.objects.count() < product_id or request.data.get('grade'):
+        if not product_id:
             return JsonResponse({'detail': 'Bad request.'}, status=HttpStatusCode.BAD_REQUEST)
 
         try:
@@ -92,7 +91,11 @@ class RatingFromUser(generics.CreateAPIView):
             )
             if not created_object:
                 obj.delete()
-                return Response(status=204)
+                return JsonResponse(
+                    {f'{enum_grade} count': ProductRating.objects.filter(
+                        product_id=product_id,
+                        grade=grade).count()},
+                    status=HttpStatusCode.OK)
         except IntegrityError:
             ProductRating.objects.filter(
                 product_id=product_id,
@@ -100,7 +103,11 @@ class RatingFromUser(generics.CreateAPIView):
             ).update(
                 grade=grade,
             )
-        return Response(status=200)
+        return JsonResponse(
+            {f'{enum_grade} count': ProductRating.objects.filter(
+                product_id=product_id,
+                grade=grade).count()},
+            status=HttpStatusCode.OK)
 
 
 class ItemOfProducts(generics.RetrieveAPIView):
