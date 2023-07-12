@@ -12,6 +12,7 @@ psycopg2 = "*"
 django-postgres-extra = "*"
 django-filter = "*"
 pylibmc = "*"
+coverage = "*"
 
 [dev-packages]
 
