@@ -79,7 +79,7 @@ class RatingFromUser(generics.CreateAPIView):
         grade = True if request.data.get('grade') == 'like' else False
         enum_grade = 'like' if grade else 'dislike'
         product_id = request.data.get('product_id')
-
+        filter_product_rating_in_product_by_grade = ProductRating.objects.filter(product_id=product_id,grade=grade)
         if not product_id:
             return JsonResponse({'detail': 'Bad request.'}, status=HttpStatusCode.BAD_REQUEST)
 
@@ -91,11 +91,6 @@ class RatingFromUser(generics.CreateAPIView):
             )
             if not created_object:
                 obj.delete()
-                return JsonResponse(
-                    {f'{enum_grade} count': ProductRating.objects.filter(
-                        product_id=product_id,
-                        grade=grade).count()},
-                    status=HttpStatusCode.OK)
         except IntegrityError:
             ProductRating.objects.filter(
                 product_id=product_id,
@@ -104,9 +99,7 @@ class RatingFromUser(generics.CreateAPIView):
                 grade=grade,
             )
         return JsonResponse(
-            {f'{enum_grade} count': ProductRating.objects.filter(
-                product_id=product_id,
-                grade=grade).count()},
+            {f'{enum_grade}_count': filter_product_rating_in_product_by_grade.count()},
             status=HttpStatusCode.OK)
 
 
