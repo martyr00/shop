@@ -6,7 +6,8 @@ from http import HTTPStatus as HttpStatusCode
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from product.models import Category, Product
+from product.models import Category, Product, ProductRating
+from product.utils import comparison_of_expected_and_result
 
 
 class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
@@ -30,45 +31,114 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         )
         self.grade_like = True
         self.grade_dislike = False
-
-    def test_record_user_rating_like(self):
-        data = {
+        self.count_like = ProductRating.objects.filter(
+            product_id=self.test_product.id,
+            grade=self.grade_like
+        ).count()
+        self.count_dislike = ProductRating.objects.filter(
+            product_id=self.test_product.id,
+            grade=self.grade_dislike
+        ).count()
+        self.data_post_like = {
             'product_id': self.test_product.id,
             'grade': 'like'
         }
+        self.data_post_dislike = {
+            'product_id': self.test_product.id,
+            'grade': 'dislike'
+        }
+
+    def test_record_user_rating_like(self):
+        """
+        Case: record like from user
+        Expect: returned count like + user's like
+        """
+        expected_result = {
+            'like_count': self.count_like + 1
+        }
+
         response = self.client.post(
             path='/api/v1/rating/',
-            data=json.dumps(data),
+            data=json.dumps(self.data_post_like),
             content_type='application/json',
-            headers={"Authorization": "Bearer " + str(RefreshToken.for_user(self.test_user).access_token)}
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
-        print(response.status_code)
-        print(response)
-        assert HttpStatusCode.OK.value == response.status_code
+
+        comparison_of_expected_and_result(
+            HttpStatusCode.OK.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
 
     def test_remove_user_rating_like(self):
-        pass
+        """
+        Case: remove like from user
+        Expect: returned count like - user's like
+        """
 
-    def test_record_user_rating_dislike(self):
-        pass
+        expected_result = {
+            'like_count': self.count_like
+        }
 
-    def test_remove_user_rating_dislike(self):
-        pass
+        ProductRating.objects.create(
+            product_id=self.test_product.id,
+            user=self.test_user,
+            grade=self.grade_like
+        )
+
+        response = self.client.post(
+            path='/api/v1/rating/',
+            data=json.dumps(self.data_post_like),
+            content_type='application/json',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
+
+        comparison_of_expected_and_result(
+            HttpStatusCode.OK.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
 
     def test_swap_user_rating_from_like_to_dislike(self):
-        pass
+        """
+        Case: swap like with dislike
+        Expect: returned count dislike + user's dislike
+        """
 
-    def test_swap_user_rating_from_dislike_to_like(self):
-        pass
+        expected_result = {
+            'dislike_count': self.count_dislike + 1
+        }
 
-    def test_record_user_rating_product_not_found(self):
-        pass
+        ProductRating.objects.create(
+            product_id=self.test_product.id,
+            user=self.test_user,
+            grade=self.grade_like,
+        )
 
-    def test_record_user_rating_with_invalid_incoming_arguments_product_id(self):
-        pass
+        response = self.client.post(
+            path='/api/v1/rating/',
+            data=json.dumps(self.data_post_dislike),
+            content_type='application/json',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
 
-    def test_record_user_rating_with_invalid_incoming_arguments_grade(self):
-        pass
+        comparison_of_expected_and_result(
+            HttpStatusCode.OK.value,
+            response.status_code,
+            expected_result,
+            response.json()
+        )
 
     def test_record_user_rating_unauthorized(self):
-        pass
+        """
+        Case: check user's access token
+        Expect: returned error's message unauthorized
+        """
+        response = self.client.post(
+            path='/api/v1/rating/',
+            data=json.dumps(self.data_post_like),
+            content_type='application/json',
+        )
+        assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
