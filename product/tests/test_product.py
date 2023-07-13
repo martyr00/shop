@@ -54,7 +54,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             }],
         }
 
-    def get_expected_fields_for_one_product(self, like, dislike, like_count, dislike_count):
+    def get_expected_fields_for_one_product(self, user_rating, like_count, dislike_count):
         """Get main field and fields for one product"""
         return {
             **self.get_main_fields_for_expected_result_product(),
@@ -63,8 +63,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             'rating': {
                 'like_count': like_count,
                 'dislike_count': dislike_count,
-                'current_user_likes': like,
-                'current_user_dislikes': dislike
+                'current_user_rating': user_rating,
             }
         }
 
@@ -113,8 +112,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         Expect: returned product no rating from user.
         """
         expected_result = self.get_expected_fields_for_one_product(
-            like=False,
-            dislike=False,
+            user_rating=None,
             like_count=0,
             dislike_count=0
         )
@@ -133,8 +131,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         """
         expected_result = {
             **self.get_expected_fields_for_one_product(
-                like=True,
-                dislike=False,
+                user_rating='like',
                 like_count=1,
                 dislike_count=0
             )
@@ -157,8 +154,7 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         """
         expected_result = {
                 **self.get_expected_fields_for_one_product(
-                    like=False,
-                    dislike=True,
+                    user_rating='dislike',
                     like_count=0,
                     dislike_count=1,
                 )
