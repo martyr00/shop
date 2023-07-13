@@ -6,6 +6,7 @@ from http import HTTPStatus as HttpStatusCode
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from product.errors import BAD_DATA_IN_REQUEST
 from product.models import Category, Product, ProductRating
 
 
@@ -136,7 +137,7 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
 
     def test_post_like_without_product_id_in_data(self):
         expected_result = {
-            "detail": "Bad request."
+            "detail": BAD_DATA_IN_REQUEST
         }
 
         data_without_product_id = {
