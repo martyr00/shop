@@ -1,12 +1,10 @@
-import json
-
 from django.contrib.auth.models import User
 from django.test import TransactionTestCase
 from http import HTTPStatus as HttpStatusCode
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from product.errors import BAD_DATA_IN_REQUEST
+from product.errors import NOT_FOUND
 from product.models import Category, Product, ProductRating
 
 
@@ -81,8 +79,32 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             grade=self.grade_like
         )
 
-        response = self.client.post(
-            path='/api/v1/rating/1/like/',
+        response = self.client.delete(
+            path=f'/api/v1/rating/{self.test_product.id}/like/',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
+
+        assert HttpStatusCode.OK.value == response.status_code
+        assert expected_result == response.json()
+
+    def test_remove_user_rating_dislike(self):
+        """
+        Case: remove like from user
+        Expect: returned count like - user's like
+        """
+
+        expected_result = {
+            'dislike_count': self.count_like
+        }
+
+        ProductRating.objects.create(
+            product_id=self.test_product.id,
+            user=self.test_user,
+            grade=self.grade_dislike
+        )
+
+        response = self.client.delete(
+            path=f'/api/v1/rating/{self.test_product.id}/dislike/',
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
@@ -106,7 +128,7 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         )
 
         response = self.client.post(
-            path='/api/v1/rating/1/dislike/',
+            path=f'/api/v1/rating/{self.test_product.id}/dislike/',
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
@@ -122,8 +144,31 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             "detail": "Authentication credentials were not provided."
         }
         response = self.client.post(
-            path='/api/v1/rating/1/like/',
-            content_type='application/json',
+            path=f'/api/v1/rating/{self.test_product.id}/like/',
         )
         assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
+        assert expected_result == response.json()
+
+    def test_remove_user_rating_like_not_found(self):
+        """"""
+        expected_result = {
+            "detail": NOT_FOUND
+        }
+        response = self.client.delete(
+            path=f'/api/v1/rating/{self.test_product.id}/like/',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
+        assert HttpStatusCode.NOT_FOUND.value == response.status_code
+        assert expected_result == response.json()
+
+    def test_remove_user_rating_dislike_not_found(self):
+        """"""
+        expected_result = {
+            "detail": NOT_FOUND
+        }
+        response = self.client.delete(
+            path=f'/api/v1/rating/{self.test_product.id}/dislike/',
+            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
+        )
+        assert HttpStatusCode.NOT_FOUND.value == response.status_code
         assert expected_result == response.json()
