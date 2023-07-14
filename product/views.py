@@ -86,7 +86,15 @@ class LikeFromUser(APIView):
             updated like count
             Otherwise, incoming arguments validation errors.
         """
-        if ProductRating.create_obj_if_not_created_delete_if_got_update(True, product_id, self.request.user):
+        if ProductRating.create_obj_or_update(True, product_id, self.request.user):
+            return JsonResponse(
+                {'like_count': ProductRating.get_count_rating_for_one_product(product_id, True)},
+                status=HttpStatusCode.OK
+            )
+        return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
+
+    def delete(self, request, product_id):
+        if ProductRating.delete_obj(True, product_id, self.request.user):
             return JsonResponse(
                 {'like_count': ProductRating.get_count_rating_for_one_product(product_id, True)},
                 status=HttpStatusCode.OK
@@ -115,7 +123,15 @@ class DislikeFromUser(APIView):
             updated dislike count
             Otherwise, incoming arguments validation errors.
         """
-        if ProductRating.create_obj_if_not_created_delete_if_got_update(False, product_id, self.request.user):
+        if ProductRating.create_obj_or_update(False, product_id, self.request.user):
+            return JsonResponse(
+                {'dislike_count': ProductRating.get_count_rating_for_one_product(product_id, False)},
+                status=HttpStatusCode.OK
+            )
+        return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
+
+    def delete(self, request, product_id):
+        if ProductRating.delete_obj(False, product_id, self.request.user):
             return JsonResponse(
                 {'dislike_count': ProductRating.get_count_rating_for_one_product(product_id, False)},
                 status=HttpStatusCode.OK

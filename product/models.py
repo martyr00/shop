@@ -1,7 +1,7 @@
 from typing import Optional
 
 from django.contrib.auth.models import User
-from django.db import models, IntegrityError
+from django.db import models
 from django.db.models import QuerySet
 from psqlextra.indexes import UniqueIndex
 
@@ -164,51 +164,43 @@ class ProductRating(models.Model):
     @classmethod
     def get_rating_from_user(cls, product_id, user):
         """
-            Retrieves the rating of a product given by a specific user.
+        Retrieves the rating of a product given by a specific user.
 
-            Arguments:
-                product_id (int): ID of the product.
-                user (User): The user who gave the rating.
+        Arguments:
+            product_id (int): ID of the product.
+            user (User): The user who gave the rating.
 
-            Returns:
-                The rating of the product given by the specified user.
-                Otherwise, None.
-            """
+        Returns:
+            The rating of the product given by the specified user.
+            Otherwise, None.
+        """
         try:
             return cls.objects.get(product_id=product_id, user=user)
         except cls.DoesNotExist:
             return None
 
     @classmethod
-    def create_obj_if_not_created_delete_if_got_update(cls, grade, product_id, user):
+    def create_obj_or_update(cls, grade, product_id, user):
         """
-        Creates an object if it does not exist or deletes it if it already exists and the grade is updated.
+       Create or update a rating object for a product and user.
 
-        Arguments:
-            grade (int): grade value.
-            product_id (int): ID of the product.
-            user (User): The user who submitted the grade.
+       Arguments:
+           grade (int): The grade value.
+           product_id (int): ID of the product.
+           user (User): The user who gave the rating.
 
-        Returns:
-            True if the object was created or updated or deleted successfully .
-            Otherwise, None.
-        """
+       Returns:
+           True if the rating object is created or updated successfully.
+           Otherwise, None.
+       """
         try:
-            obj, created_object = ProductRating.objects.get_or_create(
-                product_id=product_id,
-                user=user,
-                grade=grade,
-            )
-            if not created_object:
-                obj.delete()
-            return True
-        except IntegrityError:
-            ProductRating.objects.filter(
-                product_id=product_id,
-                user=user,
-            ).update(
-                grade=grade,
-            )
+            rating_for_product_from_user = cls.objects.filter(product_id=product_id, user=user)
+
+            if rating_for_product_from_user:
+                rating_for_product_from_user.update(grade=grade)
+            else:
+                cls.objects.create(product_id=product_id, user=user, grade=grade)
+
             return True
         except cls.DoesNotExist:
             return None
