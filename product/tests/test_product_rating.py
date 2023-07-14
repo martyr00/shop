@@ -150,7 +150,10 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         assert expected_result == response.json()
 
     def test_remove_user_rating_like_not_found(self):
-        """"""
+        """
+        Case: removing a user's rating with a like when the rating is not found.
+        Expect: receive a 404 Not Found response.
+        """
         expected_result = {
             "detail": NOT_FOUND
         }
@@ -162,7 +165,10 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         assert expected_result == response.json()
 
     def test_remove_user_rating_dislike_not_found(self):
-        """"""
+        """
+        Case: removing a user's rating with a dislike when the rating is not found.
+        Expect: receive a 404 Not Found response.
+        """
         expected_result = {
             "detail": NOT_FOUND
         }
