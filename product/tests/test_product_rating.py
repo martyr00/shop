@@ -58,9 +58,7 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         }
 
         response = self.client.post(
-            path='/api/v1/rating/',
-            data=json.dumps(self.data_post_like),
-            content_type='application/json',
+            path=f'/api/v1/rating/{self.test_product.id}/like/',
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
@@ -84,9 +82,7 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         )
 
         response = self.client.post(
-            path='/api/v1/rating/',
-            data=json.dumps(self.data_post_like),
-            content_type='application/json',
+            path='/api/v1/rating/1/like/',
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
@@ -110,9 +106,7 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         )
 
         response = self.client.post(
-            path='/api/v1/rating/',
-            data=json.dumps(self.data_post_dislike),
-            content_type='application/json',
+            path='/api/v1/rating/1/dislike/',
             headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
         )
 
@@ -128,28 +122,8 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
             "detail": "Authentication credentials were not provided."
         }
         response = self.client.post(
-            path='/api/v1/rating/',
-            data=json.dumps(self.data_post_like),
+            path='/api/v1/rating/1/like/',
             content_type='application/json',
         )
         assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
-        assert expected_result == response.json()
-
-    def test_post_like_without_product_id_in_data(self):
-        expected_result = {
-            "detail": BAD_DATA_IN_REQUEST
-        }
-
-        data_without_product_id = {
-            'grade': 'like'
-        }
-
-        response = self.client.post(
-            path='/api/v1/rating/',
-            data=json.dumps(data_without_product_id),
-            content_type='application/json',
-            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
-        )
-
-        assert HttpStatusCode.BAD_REQUEST.value == response.status_code
         assert expected_result == response.json()
