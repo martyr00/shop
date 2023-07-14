@@ -4,8 +4,9 @@ from .views import (
     ListOfProductsByCategory,
     ItemOfProducts,
     ListOfCategories,
-    RatingFromUser,
     UniqueFeaturesProductsByCategory,
+    DislikeFromUser,
+    LikeFromUser,
 )
 
 urlpatterns = [
@@ -13,5 +14,6 @@ urlpatterns = [
     path('feature/category/<int:category_id>/', UniqueFeaturesProductsByCategory.as_view()),
     path('category/', cache_page(60*15, cache='default')(ListOfCategories.as_view())),
     path('product/<int:pk>/', ItemOfProducts.as_view()),
-    path('rating/', RatingFromUser.as_view()),
+    path('rating/<product_id>/like/', LikeFromUser.as_view()),
+    path('rating/<product_id>/dislike/', DislikeFromUser.as_view()),
 ]

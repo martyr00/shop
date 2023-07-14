@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
 from product.models import Product, Features, Category, ProductRating
 
@@ -26,7 +25,7 @@ class ProductRatingSerializer(serializers.ModelSerializer):
 
 
 class FeaturesSerializer(serializers.ModelSerializer):
-    key = serializers.CharField(validators=[UniqueValidator(queryset=Features.objects.all())])
+    key = serializers.CharField()
     options = serializers.SerializerMethodField()
 
     class Meta:
@@ -34,10 +33,7 @@ class FeaturesSerializer(serializers.ModelSerializer):
         fields = ('key', 'options')
 
     def get_options(self, obj):
-        return Features.objects.filter(
-            product__category_id=self.context['view'].kwargs['category_id'],
-            key=obj.get('key')
-        ).values('value', 'id').distinct()
+        return Features.get_unique_features_value_by_keys(self.context['view'].kwargs['category_id'], obj.get('key'))
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -78,10 +74,21 @@ class ProductSerializer(serializers.ModelSerializer):
         )
 
     def get_rating(self, obj):
+        rating_counters = {
+            'like_count': ProductRating.get_count_rating_for_one_product(obj.id, True),
+            'dislike_count': ProductRating.get_count_rating_for_one_product(obj.id, False),
+        }
+
         current_user = self.context['request'].user if self.context['request'].user.is_authenticated else None
+
+        current_user_rating_for_product = ProductRating.get_rating_from_user(obj.id, current_user)
+        if current_user_rating_for_product:
+            current_user_rating = 'like' if current_user_rating_for_product.grade else 'dislike'
+            return {
+                **rating_counters,
+                'current_user_rating': current_user_rating
+            }
         return {
-            'like_count': ProductRating.objects.filter(product=obj.id, grade=True).count(),
-            'dislike_count': ProductRating.objects.filter(product=obj.id, grade=False).count(),
-            'current_user_likes': bool(ProductRating.objects.filter(product=obj.id, grade=True, user=current_user)),
-            'current_user_dislikes': bool(ProductRating.objects.filter(product=obj.id, grade=False, user=current_user)),
+            **rating_counters,
+            'current_user_rating': None
         }

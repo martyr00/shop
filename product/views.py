@@ -1,11 +1,10 @@
 from http import HTTPStatus as HttpStatusCode
-from django.db import IntegrityError
 from django.http import JsonResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
-from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from .errors import NOT_FOUND
 from .models import (
     Product,
     Category,
@@ -19,117 +18,146 @@ from .serializer import (
     CategorySerializer,
     ProductListSerializer, ProductRatingSerializer, ProductSerializer, FeaturesSerializer,
 )
-from .filters import ProductFilter
 
 
 class ListOfProductsByCategory(generics.ListAPIView):
-    """Response filtered list of products by category_id and features and sorted"""
+    """
+    A view for listing products by category.
+    Only authenticated administrators have write access, while all users have read access.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     permission_classes = [IsAdminOrReadOnly, ]
-    filter_backends = [DjangoFilterBackend, ]
-    filterset_class = ProductFilter
 
     def get_queryset(self):
-        """Response queryset"""
-        return self.get_filtered_queryset(self.get_sort_queryset(self.get_queryset_by_category()))
+        """
+        Returns the queryset of products filtered and sorted based on the provided query parameters.
+        Raises NotFound exception if no products are found.
+        """
+        sort_dict, sort_by = self.get_query_params_for_sort()
+        filter_params = self.get_query_params_for_filter()
 
-    def get_queryset_by_category(self):
-        """Get queryset filtered by category"""
-        product_list_by_category = Product.objects.filter(category=self.kwargs['category_id'])
-        if product_list_by_category:
-            return product_list_by_category
-        raise NotFound
+        product_list = Product.get_filtered_and_sorted_list_of_product_by_category(
+            self.kwargs['category_id'], sort_dict, sort_by, filter_params)
 
-    def get_sort_queryset(self, queryset):
-        """Get sort queryset"""
+        if not product_list:
+            raise NotFound
+
+        return product_list
+
+    def get_query_params_for_sort(self):
+        """
+        Get the sort_dict and sort_by values from the query parameters.
+        Returns the sort_dict and sort_by values.
+        """
         dictionary_from_id = self.request.query_params
 
         sort_dict = '-' if dictionary_from_id.get('sort_dict') == 'desc' else ''
         sort_by = 'title' if dictionary_from_id.get('sort_by') is None else dictionary_from_id.get('sort_by')
 
-        return queryset.order_by(sort_dict + sort_by)
+        return sort_dict, sort_by
 
-    def get_filtered_queryset(self, queryset):
-        """Get queryset filtered by features_id in query_params"""
-        filters = self.request.query_params.getlist('filter') if self.request.query_params.getlist('filter') else None
-
-        if not filters:
-            return queryset
-
-        features = Features.objects.filter(id__in=filters)
-
-        keys = features.values_list('key', flat=True)
-        values = features.values_list('value', flat=True)
-
-        for ele in range(len(values)):
-            queryset = queryset.filter(features__key__in=keys, features__value=values[ele])
-
-        return queryset
+    def get_query_params_for_filter(self):
+        """
+        Get the filter parameter values from the query parameters.
+        Returns the filter parameter values as a list.
+        """
+        return self.request.query_params.getlist('filter') if self.request.query_params.getlist('filter') else None
 
 
-class RatingFromUser(generics.CreateAPIView):
-    """Rate the product"""
+class LikeFromUser(APIView):
+    """
+    API view for rating a product with a dislike.
+    Only authenticated users have access to rate a product.
+    """
     queryset = ProductRating.objects.all()
     permission_classes = [IsAdminOrAuthenticatedUser, ]
     serializer_class = ProductRatingSerializer
 
-    def post(self, request, *args, **kwargs):
-        """Record user rating in database"""
-        grade = True if request.data.get('grade') == 'like' else False
-        enum_grade = 'like' if grade else 'dislike'
-        product_id = request.data.get('product_id')
-        filter_product_rating_in_product_by_grade = ProductRating.objects.filter(product_id=product_id,grade=grade)
-        if not product_id:
-            return JsonResponse({'detail': 'Bad request.'}, status=HttpStatusCode.BAD_REQUEST)
+    def post(self, request, product_id):
+        """
+        Rate a product with a like and return the updated dislike count.
 
-        try:
-            obj, created_object = ProductRating.objects.get_or_create(
-                product_id=product_id,
-                user=request.user,
-                grade=grade,
+        Arguments:
+            request (Request): a request.
+            product_id (Request): a product id.
+
+        Returns:
+            updated like count
+            Otherwise, incoming arguments validation errors.
+        """
+        if ProductRating.create_obj_if_not_created_delete_if_got_update(True, product_id, self.request.user):
+            return JsonResponse(
+                {'like_count': ProductRating.get_count_rating_for_one_product(product_id, True)},
+                status=HttpStatusCode.OK
             )
-            if not created_object:
-                obj.delete()
-        except IntegrityError:
-            ProductRating.objects.filter(
-                product_id=product_id,
-                user=request.user,
-            ).update(
-                grade=grade,
+        return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
+
+
+class DislikeFromUser(APIView):
+    """
+    API view for rating a product with a dislike.
+    Only authenticated users have access to rate a product.
+    """
+    queryset = ProductRating.objects.all()
+    permission_classes = [IsAdminOrAuthenticatedUser, ]
+    serializer_class = ProductRatingSerializer
+
+    def post(self, request, product_id):
+        """
+        Rate a product with a dislike and return the updated dislike count.
+
+         Arguments:
+            request (Request): a request.
+            product_id (Request): a product id.
+
+        Returns:
+            updated dislike count
+            Otherwise, incoming arguments validation errors.
+        """
+        if ProductRating.create_obj_if_not_created_delete_if_got_update(False, product_id, self.request.user):
+            return JsonResponse(
+                {'dislike_count': ProductRating.get_count_rating_for_one_product(product_id, False)},
+                status=HttpStatusCode.OK
             )
-        return JsonResponse(
-            {f'{enum_grade}_count': filter_product_rating_in_product_by_grade.count()},
-            status=HttpStatusCode.OK)
+        return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
 
 
 class ItemOfProducts(generics.RetrieveAPIView):
-    """Get one product"""
+    """
+    A view for retrieving a single product item.
+    Only authenticated administrators have write access, while all users have read access.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly, ]
 
 
 class ListOfCategories(generics.ListAPIView):
-    """Get filtered queryset  category"""
+    """
+    A view for listing categories.
+    Only authenticated administrators have write access, while all users have read access.
+    """
     queryset = Category.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = CategorySerializer
 
 
 class UniqueFeaturesProductsByCategory(generics.ListAPIView):
-    """Get unique keys of features by products in one category"""
+    """
+    A view for retrieving unique keys of features by products in a specific category.
+    Only authenticated administrators have write access, while all users have read access.
+    """
     queryset = Features.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
     serializer_class = FeaturesSerializer
 
     def get_queryset(self):
-        """Response unique features keys dict by category"""
-        result_queryset = Features.objects.filter(
-            product__category_id=self.kwargs['category_id']
-        ).distinct().values(
-            'key',
-        ).distinct()
+        """
+        Returns a queryset of unique feature keys by category.
+        Raises NotFound exception if no features are found.
+        """
+        result_queryset = Features.get_unique_features_keys_by_category(self.kwargs['category_id'])
         if result_queryset:
             return result_queryset
         raise NotFound
