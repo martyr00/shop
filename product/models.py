@@ -107,24 +107,20 @@ class Product(models.Model):
 
         Returns:
             A filtered and sorted QuerySet of products matching the specified criteria.
-            Otherwise, None.
         """
-        try:
-            products_list = cls.objects.filter(category_id=category_id).order_by(sort_dict + sort_by)
+        products_list = cls.objects.filter(category_id=category_id).order_by(sort_dict + sort_by)
 
-            if not filter_params:
-                return products_list
-
-            features_list = Features.get_features_list_by_id_in(filter_params)
-            keys = features_list.values_list('key', flat=True)
-            values = features_list.values_list('value', flat=True)
-
-            for value in values:
-                products_list = products_list.filter(features__key__in=keys, features__value=value)
-
+        if not filter_params:
             return products_list
-        except cls.DoesNotExist:
-            return None
+
+        features_list = Features.get_features_list_by_id_in(filter_params)
+        keys = features_list.values_list('key', flat=True)
+        values = features_list.values_list('value', flat=True)
+
+        for value in values:
+            products_list = products_list.filter(features__key__in=keys, features__value=value)
+
+        return products_list
 
     def __str__(self):
         return f'{self.title} | {self.category.title}'
@@ -180,7 +176,7 @@ class ProductRating(models.Model):
             return None
 
     @classmethod
-    def create_obj_or_update(cls, grade, product_id, user):
+    def create_or_update_rating(cls, grade, product_id, user):
         """
        Create or update a rating object for a product and user.
 
@@ -201,12 +197,11 @@ class ProductRating(models.Model):
             else:
                 cls.objects.create(product_id=product_id, user=user, grade=grade)
 
-            return True
         except cls.DoesNotExist:
             return None
 
     @classmethod
-    def delete_obj(cls, grade, product_id, user):
+    def delete_rating(cls, grade, product_id, user):
         """
         Deletes an object with the specified grade, product ID, and user.
 
@@ -221,7 +216,6 @@ class ProductRating(models.Model):
         """
         try:
             cls.objects.get(product_id=product_id, user=user, grade=grade).delete()
-            return True
         except cls.DoesNotExist:
             return None
 
