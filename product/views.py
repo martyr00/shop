@@ -86,7 +86,7 @@ class LikeFromUser(APIView):
             updated like count
             Otherwise, incoming arguments validation errors.
         """
-        if not ProductRating.create_or_update_rating(True, product_id, self.request.user):
+        if ProductRating.create_or_update_rating(True, product_id, self.request.user):
             return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
         return JsonResponse(
             {'like_count': ProductRating.get_count_rating_for_one_product(product_id, True)},
@@ -94,7 +94,7 @@ class LikeFromUser(APIView):
         )
 
     def delete(self, request, product_id):
-        if not ProductRating.delete_rating(True, product_id, self.request.user):
+        if ProductRating.delete_rating(True, product_id, self.request.user):
             return JsonResponse({'detail': NOT_FOUND}, status=HttpStatusCode.NOT_FOUND)
         return JsonResponse(
             {'like_count': ProductRating.get_count_rating_for_one_product(product_id, True)},
