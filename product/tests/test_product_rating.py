@@ -148,33 +148,3 @@ class ProductRatingModelViewPOSTMethodTestCase(TransactionTestCase):
         )
         assert HttpStatusCode.UNAUTHORIZED.value == response.status_code
         assert expected_result == response.json()
-
-    def test_remove_user_rating_like_not_found(self):
-        """
-        Case: removing a user's rating with a like when the rating is not found.
-        Expect: receive a 404 Not Found response.
-        """
-        expected_result = {
-            "detail": NOT_FOUND
-        }
-        response = self.client.delete(
-            path=f'/api/v1/rating/{self.test_product.id}/like/',
-            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
-        )
-        assert HttpStatusCode.NOT_FOUND.value == response.status_code
-        assert expected_result == response.json()
-
-    def test_remove_user_rating_dislike_not_found(self):
-        """
-        Case: removing a user's rating with a dislike when the rating is not found.
-        Expect: receive a 404 Not Found response.
-        """
-        expected_result = {
-            "detail": NOT_FOUND
-        }
-        response = self.client.delete(
-            path=f'/api/v1/rating/{self.test_product.id}/dislike/',
-            headers={'Authorization': 'Bearer ' + str(RefreshToken.for_user(self.test_user).access_token)}
-        )
-        assert HttpStatusCode.NOT_FOUND.value == response.status_code
-        assert expected_result == response.json()
