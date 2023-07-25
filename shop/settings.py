@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     'django_filters',
     'product.apps.ProductConfig',
     'user_auth.apps.UserAuthConfig',
-    'gallery.apps.GalleryConfig',
 ]
 
 MIDDLEWARE = [
