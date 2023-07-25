@@ -3,7 +3,7 @@
 # from django.test import TransactionTestCase
 # from http import HTTPStatus as HttpStatusCode
 #
-# from image.models import Image
+# from gallery.models import Image
 #
 #
 # # Create your tests here.
@@ -22,11 +22,11 @@
 #         """
 #         self.test_image_1 = Image.objects.create(
 #             title='test_image_1',
-#             image='...'
+#             gallery='...'
 #         )
 #         self.test_image_2 = Image.objects.create(
 #             title='test_image_2',
-#             image='...'
+#             gallery='...'
 #         )
 #
 #     def test_images(self):
