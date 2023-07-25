@@ -224,3 +224,4 @@ class ProductRating(models.Model):
             return f'Like: {self.user} | {self.product}'
 
         return f'Dislike {self.user} | {self.product}'
+

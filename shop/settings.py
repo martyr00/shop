@@ -2,8 +2,6 @@ import os.path
 from datetime import timedelta
 from pathlib import Path
 
-import shop.middlewares
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,7 +33,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'shop.middlewares.LoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
