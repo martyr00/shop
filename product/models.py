@@ -5,6 +5,8 @@ from django.db import models
 from django.db.models import QuerySet
 from psqlextra.indexes import UniqueIndex
 
+from gallery.models import Image
+
 
 class Category(models.Model):
     title = models.CharField(max_length=150, verbose_name='title', unique=True)
@@ -83,7 +85,9 @@ class Product(models.Model):
     description = models.CharField(max_length=500, verbose_name='description')
 
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
     features = models.ManyToManyField(Features, )
+    images = models.ManyToManyField(Image, )
 
     created_time = models.DateTimeField(auto_now_add=True, verbose_name='created_time')
     update_time = models.DateTimeField(auto_now=True, verbose_name='update_time')
@@ -123,7 +127,7 @@ class Product(models.Model):
         return products_list
 
     def __str__(self):
-        return f'{self.title} | {self.category.title}'
+        return f'{self.id} | {self.title} | {self.category.title}'
 
 
 class ProductRating(models.Model):
