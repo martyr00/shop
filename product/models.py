@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from django.contrib.auth.models import User
@@ -225,3 +226,19 @@ class ProductRating(models.Model):
             return f'Like: {self.user} | {self.product}'
 
         return f'Dislike {self.user} | {self.product}'
+
+
+def image_upload_path(instance, filename):
+    category_title = instance.product.category.title
+
+    upload_path = os.path.join('product_images', category_title, filename)
+    return f"image/{upload_path}"
+
+
+class ProductImage(models.Model):
+    title = models.CharField(max_length=100)
+    image = models.ImageField(upload_to=image_upload_path)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title}'
