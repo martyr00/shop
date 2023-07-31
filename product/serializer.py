@@ -41,6 +41,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     features = FeaturesSerializerForProduct(many=True)
     category = serializers.CharField()
     category_id = serializers.IntegerField()
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -51,15 +52,13 @@ class ProductListSerializer(serializers.ModelSerializer):
             'category',
             'category_id',
             'features',
+            'media',
         )
 
+    def get_media(self, obj):
+        list_images_urls = list(ProductImage.get_all_images_urls_for_one_product(obj.id))
+        return list(map(lambda image_url: '/media/' + str(image_url), list_images_urls))
 
-class ImageProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = (
-            'image',
-        )
 
 class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
