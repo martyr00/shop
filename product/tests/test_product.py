@@ -1,10 +1,11 @@
 from django.contrib.auth.models import User
+from django.core.files import File
 from django.test import TransactionTestCase
 from http import HTTPStatus as HttpStatusCode
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from product.models import Category, Product, Features, ProductRating
+from product.models import Category, Product, Features, ProductRating, ProductImage
 
 
 class ProductModelViewGETMethodTestCase(TransactionTestCase):
@@ -38,6 +39,11 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
             category=self.test_category,
         )
         self.test_product.features.add(self.test_features)
+        self.test_product_image = ProductImage.objects.create(
+            title='test',
+            image=File(open('test_image1.png', 'rb')),
+            product=self.test_product
+        )
 
     def get_main_fields_for_expected_result_product(self):
         """Get main fields for expected_result"""
@@ -52,6 +58,9 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
                 'key': self.test_features.key,
                 'value': self.test_features.value
             }],
+            'media': [
+                f'/media/{self.test_product_image.image}'
+            ]
         }
 
     def get_expected_fields_for_one_product(self, user_rating, like_count, dislike_count):
@@ -221,7 +230,8 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
                             'key': 'Test key 2',
                             'value': 'Test value 2'
                         }
-                    ]
+                    ],
+                    'media': [],
                 },
             ]
         }
@@ -232,3 +242,9 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
 
         assert HttpStatusCode.OK.value == response.status_code
         assert expected_result == response.json()
+
+    def tearDown(self):
+        self.test_product_image.image.delete()
+        self.test_product_image.delete()
+        self.test_product.delete()
+        self.test_category.delete()
