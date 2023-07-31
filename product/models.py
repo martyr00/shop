@@ -230,8 +230,9 @@ class ProductRating(models.Model):
 
 def image_upload_path(instance, filename):
     category_id = instance.product.category.id
+
     upload_path = os.path.join('product_images', str(category_id), filename)
-    print(f'image/{upload_path}')
+    return f"image/{upload_path}"
 
 
 class ProductImage(models.Model):
