@@ -240,5 +240,9 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to=image_upload_path)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
+    @classmethod
+    def get_all_images_urls_for_one_product(cls, product_id):
+        return ProductImage.objects.filter(product_id=product_id).values_list('image', flat=True)
+
     def __str__(self):
         return f'{self.title}'

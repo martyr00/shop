@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from product.models import Product, Features, Category, ProductRating
+from product.models import Product, Features, Category, ProductRating, ProductImage
 
 
 class FeaturesSerializerForProduct(serializers.ModelSerializer):
@@ -54,10 +54,18 @@ class ProductListSerializer(serializers.ModelSerializer):
         )
 
 
+class ImageProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = (
+            'image',
+        )
+
 class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
     category = serializers.CharField()
     features = FeaturesSerializerForProduct(many=True)
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -70,8 +78,13 @@ class ProductSerializer(serializers.ModelSerializer):
             'category_id',
             'description',
             'features',
+            'media',
             'rating',
         )
+
+    def get_media(self, obj):
+        list_images_urls = list(ProductImage.get_all_images_urls_for_one_product(obj.id))
+        return list(map(lambda image_url: '/media/' + str(image_url), list_images_urls))
 
     def get_rating(self, obj):
         rating_counters = {
