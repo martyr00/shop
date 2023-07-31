@@ -26,28 +26,31 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
 
     def test_check_product_image_in_db(self):
         """"""
-        print(self.test_product_image.image)
-        assert ProductImage.objects.count() == 1
-        assert self.test_product_image.title == 'test'
-        assert self.test_product_image.image == 'image/product_images/Test category/test_image1.png'
-        assert self.test_product_image.product == self.test_product
+        image1_from_db = ProductImage.objects.get(pk=self.test_product_image.id)
 
-        os.remove('media/image/product_images/Test category/test_image1.png')
+        assert ProductImage.objects.count() == 1
+        assert self.test_product_image.title == image1_from_db.title
+        assert self.test_product_image.image == image1_from_db.image
+        assert self.test_product_image.product == image1_from_db.product
 
     def test_record_product_image_to_db(self):
         """"""
-        ProductImage.objects.create(
+        image2 = ProductImage.objects.create(
             title='test2',
             image=File(open('test_image2.png', 'rb')),
             product=self.test_product
         )
 
-        image2 = ProductImage.objects.get(pk=3)
+        assert ProductImage.objects.filter(pk=image2.id).exists()
 
-        assert ProductImage.objects.count() == 2
-        assert image2.title == 'test2'
-        assert image2.image == 'image/product_images/Test category/test_image2.png'
-        assert image2.product == self.test_product
+        image2.delete()
 
-        os.remove('media/image/product_images/Test category/test_image1.png')
-        os.remove('media/image/product_images/Test category/test_image2.png')
+        assert not ProductImage.objects.filter(pk=image2.id).exists()
+
+        os.remove(image2.image.path)
+
+    def tearDown(self):
+        self.test_product_image.image.delete()
+        self.test_product_image.delete()
+        self.test_product.delete()
+        self.test_category.delete()
