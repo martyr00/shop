@@ -8,6 +8,9 @@ from product.models import Category, Product, ProductImage
 
 class ProductModelViewGETMethodTestCase(TransactionTestCase):
     def setUp(self):
+        """
+        Set up data for tests.
+        """
         self.test_category = Category.objects.create(
             title='Test category'
         )
@@ -25,7 +28,12 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         )
 
     def test_check_product_image_in_db(self):
-        """"""
+        """
+        Case: Retrieving a `ProductImage` object from the database and comparing its attributes with the original.
+        Expect:
+            - The number of `ProductImage` objects in the database should be equal to 1.
+            - The `title`, `image`, and `product` attributes of the retrieved object should match the original object.
+        """
         image1_from_db = ProductImage.objects.get(pk=self.test_product_image.id)
 
         assert ProductImage.objects.count() == 1
@@ -34,7 +42,10 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         assert self.test_product_image.product == image1_from_db.product
 
     def test_record_product_image_to_db(self):
-        """"""
+        """
+        Case: Creating a new `ProductImage` object and saving it to the database.
+        Expect: The `ProductImage` object should be successfully created and saved to the database.
+        """
         image2 = ProductImage.objects.create(
             title='test2',
             image=File(open('test_image2.png', 'rb')),
@@ -50,6 +61,9 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         os.remove(image2.image.path)
 
     def tearDown(self):
+        """
+        Method to clean up resources after each test.
+        """
         self.test_product_image.image.delete()
         self.test_product_image.delete()
         self.test_product.delete()

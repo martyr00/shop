@@ -244,6 +244,9 @@ class ProductModelViewGETMethodTestCase(TransactionTestCase):
         assert expected_result == response.json()
 
     def tearDown(self):
+        """
+        Method to clean up resources after each test.
+        """
         self.test_product_image.image.delete()
         self.test_product_image.delete()
         self.test_product.delete()
